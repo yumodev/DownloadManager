@@ -1,0 +1,69 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.ymdev.download">
+
+    <!--&lt;!&ndash; Allows access to the Download Manager &ndash;&gt;-->
+    <permission android:name="com.ymdev.download.permission.ACCESS_DOWNLOAD_MANAGER"
+        android:label="@string/permlab_downloadManager"
+        android:description="@string/permdesc_downloadManager"
+        android:protectionLevel="signatureOrSystem" />
+
+    <!-- Allows advanced access to the Download Manager -->
+    <permission android:name="com.ymdev.download.permission.ACCESS_DOWNLOAD_MANAGER_ADVANCED"
+        android:label="@string/permlab_downloadManagerAdvanced"
+        android:description="@string/permdesc_downloadManagerAdvanced"
+        android:protectionLevel="normal" />
+
+    <!-- Allows to send download completed intents -->
+    <permission android:name="com.ymdev.download.permission.SEND_DOWNLOAD_COMPLETED_INTENTS"
+        android:label="@string/permlab_downloadCompletedIntent"
+        android:description="@string/permdesc_downloadCompletedIntent"
+        android:protectionLevel="normal" />
+
+    <!-- Allows to download non-purgeable files to the cache partition through the public API -->
+    <permission android:name="com.ymdev.download.permission.DOWNLOAD_CACHE_NON_PURGEABLE"
+        android:label="@string/permlab_downloadCacheNonPurgeable"
+        android:description="@string/permdesc_downloadCacheNonPurgeable"
+        android:protectionLevel="normal"/>
+
+    <!-- Allows to queue downloads without a notification shown while the download runs. -->
+    <permission android:name="com.ymdev.download.permission.DOWNLOAD_WITHOUT_NOTIFICATION"
+        android:permissionGroup="android.permission-group.NETWORK"
+        android:label="@string/permlab_downloadWithoutNotification"
+        android:description="@string/permdesc_downloadWithoutNotification"
+        android:protectionLevel="normal"/>
+
+    <!-- Allows an app to access all downloads in the system via the /all_downloads/ URIs.  The
+         protection level could be relaxed in the future to support third-party download
+         managers. -->
+    <permission android:name="com.ymdev.download.permission.ACCESS_ALL_DOWNLOADS"
+        android:label="@string/permlab_accessAllDownloads"
+        android:description="@string/permdesc_accessAllDownloads"
+        android:protectionLevel="signature"/>
+·
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.ACCESS_DOWNLOAD_MANAGER" />
+    <uses-permission android:name="android.permission.SEND_DOWNLOAD_COMPLETED_INTENTS" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.INSTALL_DRM" />
+
+    <application
+        android:label="@string/app_label">
+        <provider android:name=".providers.DownloadProvider"
+            android:authorities="${applicationId}">
+        </provider>
+        <service android:name=".providers.DownloadService"/>
+        <receiver android:name=".providers.DownloadReceiver" android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.net.conn.CONNECTIVITY_CHANGE" />
+            </intent-filter>
+        </receiver>
+
+        <activity android:name=".providers.SizeLimitActivity"
+            android:launchMode="singleTask"
+            android:theme="@style/Theme.Translucent"/>
+    </application>
+
+</manifest>
