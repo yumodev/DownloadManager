@@ -594,42 +594,41 @@ public final class Downloads {
         /**
          * The permission to access the download manager
          */
-        public static final String PERMISSION_ACCESS = AUTHORITY+".permission.ACCESS_DOWNLOAD_MANAGER";
+        public static String PERMISSION_ACCESS = AUTHORITY+".permission.ACCESS_DOWNLOAD_MANAGER";
 
         /**
          * The permission to access the download manager's advanced functions
          */
-        public static final String PERMISSION_ACCESS_ADVANCED =
-                AUTHORITY+".permission.ACCESS_DOWNLOAD_MANAGER_ADVANCED";
+        public static String PERMISSION_ACCESS_ADVANCED = "android.permission.ACCESS_DOWNLOAD_MANAGER_ADVANCED";
 
         /**
          * The permission to access the all the downloads in the manager.
          */
-        public static final String PERMISSION_ACCESS_ALL = AUTHORITY+".permission.ACCESS_ALL_DOWNLOADS";
+        public static String PERMISSION_ACCESS_ALL = AUTHORITY+".permission.ACCESS_ALL_DOWNLOADS";
 
         /**
          * The permission to directly access the download manager's cache
          * directory
          */
-        public static final String PERMISSION_CACHE = AUTHORITY+".permission.ACCESS_CACHE_FILESYSTEM";
+        public static String PERMISSION_CACHE = AUTHORITY+".permission.ACCESS_CACHE_FILESYSTEM";
 
         /**
          * The permission to send broadcasts on download completion
          */
-        public static final String PERMISSION_SEND_INTENTS =
+        public static String PERMISSION_SEND_INTENTS =
                 AUTHORITY+".permission.SEND_DOWNLOAD_COMPLETED_INTENTS";
 
         /**
          * The permission to download files to the cache partition that won't be automatically
          * purged when space is needed.
          */
-        public static final String PERMISSION_CACHE_NON_PURGEABLE =
+        public static String PERMISSION_CACHE_NON_PURGEABLE =
                 AUTHORITY+".permission.DOWNLOAD_CACHE_NON_PURGEABLE";
 
         /**
          * The permission to download files without any system notification being shown.
          */
-        public static final String PERMISSION_NO_NOTIFICATION =
+        public static String PERMISSION_NO_NOTIFICATION =
                 AUTHORITY+".permission.DOWNLOAD_WITHOUT_NOTIFICATION";
 
         /**

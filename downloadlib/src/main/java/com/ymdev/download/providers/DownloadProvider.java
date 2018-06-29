@@ -386,6 +386,21 @@ public final class DownloadProvider extends ContentProvider {
 
             BASE_URIS.add(Downloads.Impl.CONTENT_URI);
             BASE_URIS.add(Downloads.Impl.ALL_DOWNLOADS_CONTENT_URI);
+
+
+            Downloads.Impl.PERMISSION_ACCESS = Downloads.AUTHORITY+".permission.ACCESS_DOWNLOAD_MANAGER";
+
+            //Downloads.Impl.PERMISSION_ACCESS_ADVANCED = Downloads.AUTHORITY+".permission.ACCESS_DOWNLOAD_MANAGER_ADVANCED";
+
+            Downloads.Impl.PERMISSION_ACCESS_ALL = Downloads.AUTHORITY+".permission.ACCESS_ALL_DOWNLOADS";
+
+            Downloads.Impl.PERMISSION_CACHE = Downloads.AUTHORITY+".permission.ACCESS_CACHE_FILESYSTEM";
+
+            Downloads.Impl.PERMISSION_SEND_INTENTS = Downloads.AUTHORITY+".permission.SEND_DOWNLOAD_COMPLETED_INTENTS";
+
+            Downloads.Impl.PERMISSION_CACHE_NON_PURGEABLE = Downloads.AUTHORITY+".permission.DOWNLOAD_CACHE_NON_PURGEABLE";
+
+            Downloads.Impl.PERMISSION_NO_NOTIFICATION = Downloads.AUTHORITY+".permission.DOWNLOAD_WITHOUT_NOTIFICATION";
         }
     }
     /**
@@ -478,10 +493,12 @@ public final class DownloadProvider extends ContentProvider {
             }
             // for public API behavior, if an app has CACHE_NON_PURGEABLE permission, automatically
             // switch to non-purgeable download
-            boolean hasNonPurgeablePermission =
-                    getContext().checkCallingPermission(
-                            Downloads.Impl.PERMISSION_CACHE_NON_PURGEABLE)
-                            == PackageManager.PERMISSION_GRANTED;
+//            boolean hasNonPurgeablePermission =
+//                    getContext().checkCallingPermission(
+//                            Downloads.Impl.PERMISSION_CACHE_NON_PURGEABLE)
+//                            == PackageManager.PERMISSION_GRANTED;
+
+            boolean hasNonPurgeablePermission = true;
             if (isPublicApi && dest == Downloads.Impl.DESTINATION_CACHE_PARTITION_PURGEABLE
                     && hasNonPurgeablePermission) {
                 dest = Downloads.Impl.DESTINATION_CACHE_PARTITION;
@@ -614,10 +631,10 @@ public final class DownloadProvider extends ContentProvider {
      * @throws SecurityException if the caller has insufficient permissions
      */
     private void checkInsertPermissions(ContentValues values) {
-        if (getContext().checkCallingOrSelfPermission(Downloads.Impl.PERMISSION_ACCESS)
-                == PackageManager.PERMISSION_GRANTED) {
-            return;
-        }
+//        if (getContext().checkCallingOrSelfPermission(Downloads.Impl.PERMISSION_ACCESS)
+//                == PackageManager.PERMISSION_GRANTED) {
+//            return;
+//        }
 
         getContext().enforceCallingOrSelfPermission(android.Manifest.permission.INTERNET,
                 "INTERNET permission is required to use the download manager");
@@ -632,8 +649,9 @@ public final class DownloadProvider extends ContentProvider {
                 Downloads.Impl.DESTINATION_CACHE_PARTITION_PURGEABLE,
                 Downloads.Impl.DESTINATION_FILE_URI);
 
-        if (getContext().checkCallingOrSelfPermission(Downloads.Impl.PERMISSION_NO_NOTIFICATION)
-                == PackageManager.PERMISSION_GRANTED) {
+//        if (getContext().checkCallingOrSelfPermission(Downloads.Impl.PERMISSION_NO_NOTIFICATION)
+//                == PackageManager.PERMISSION_GRANTED) {
+        if (false){
             enforceAllowedValues(values, Downloads.Impl.COLUMN_VISIBILITY,
                     Downloads.Impl.VISIBILITY_HIDDEN, Downloads.Impl.VISIBILITY_VISIBLE);
         } else {
@@ -982,8 +1000,9 @@ public final class DownloadProvider extends ContentProvider {
             selection.appendClause(Downloads.Impl._ID + " = ?", getDownloadIdFromUri(uri));
         }
         if ((uriMatch == MY_DOWNLOADS || uriMatch == MY_DOWNLOADS_ID)
-                && getContext().checkCallingPermission(Downloads.Impl.PERMISSION_ACCESS_ALL)
-                != PackageManager.PERMISSION_GRANTED) {
+//                && getContext().checkCallingPermission(Downloads.Impl.PERMISSION_ACCESS_ALL)
+//                != PackageManager.PERMISSION_GRANTED
+) {
             selection.appendClause(
                     Constants.UID + "= ? OR " + Downloads.Impl.COLUMN_OTHER_UID + "= ?",
                     Binder.getCallingUid(), Binder.getCallingPid());
