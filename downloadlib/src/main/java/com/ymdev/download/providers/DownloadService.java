@@ -247,6 +247,7 @@ public class DownloadService extends Service {
         }
 
         public void run() {
+            //后台线程
             Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND);
 
             trimDatabase();
@@ -449,6 +450,7 @@ public class DownloadService extends Service {
 
     /**
      * Drops old rows from the database to prevent it from growing too large
+     * 删除多余的下载数据
      */
     private void trimDatabase() {
         Cursor cursor = getContentResolver().query(Downloads.Impl.ALL_DOWNLOADS_CONTENT_URI,

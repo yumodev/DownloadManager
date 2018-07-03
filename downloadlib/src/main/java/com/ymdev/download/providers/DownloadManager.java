@@ -125,13 +125,14 @@ public class DownloadManager {
     public final static String COLUMN_REASON = "reason";
 
     /**
-     * Number of bytes download so far.
+     * Number of bytes download so far. 已下载的字节数
      */
     public final static String COLUMN_BYTES_DOWNLOADED_SO_FAR = "bytes_so_far";
 
     /**
      * Timestamp when the download was last modified, in {@link System#currentTimeMillis
      * System.currentTimeMillis()} (wall clock time in UTC).
+     * 最后更新时间
      */
     public final static String COLUMN_LAST_MODIFIED_TIMESTAMP = "last_modified_timestamp";
 
@@ -312,6 +313,7 @@ public class DownloadManager {
      * Note that the default download destination is a shared volume where the system might delete
      * your file if it needs to reclaim space for system use. If this is a problem, use a location
      * on external storage (see {@link #setDestinationUri(Uri)}.
+     * 下载请求
      */
     public static class Request {
         /**
@@ -563,6 +565,7 @@ public class DownloadManager {
 
     /**
      * This class may be used to filter download manager queries.
+     * 查询器
      */
     public static class Query {
         /**
@@ -1036,7 +1039,7 @@ public class DownloadManager {
             return getUnderlyingLong(Downloads.COLUMN_LAST_MODIFICATION);
         }
 
-        private long getReason(int status) {
+        public long getReason(int status) {
             switch (translateStatus(status)) {
                 case STATUS_FAILED:
                     return getErrorCode(status);
@@ -1133,9 +1136,5 @@ public class DownloadManager {
                     return STATUS_FAILED;
             }
         }
-    }
-
-    public static void init(Application application){
-        //Downloads.AUTHORITY = application.getPackageName();
     }
 }

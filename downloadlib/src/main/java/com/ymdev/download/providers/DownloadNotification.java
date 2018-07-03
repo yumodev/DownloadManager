@@ -36,7 +36,7 @@ import java.util.HashMap;
  * cases where there is an ongoing download. Once the download is complete
  * (be it successful or unsuccessful) it is no longer the responsibility
  * of this component to show the download in the notification manager.
- *
+ * 下载通知管理累。
  */
 class DownloadNotification {
 
@@ -100,7 +100,7 @@ class DownloadNotification {
     DownloadNotification(Context ctx, SystemFacade systemFacade) {
         mContext = ctx;
         mSystemFacade = systemFacade;
-        mNotifications = new HashMap<String, NotificationItem>();
+        mNotifications = new HashMap<>();
     }
 
     /*

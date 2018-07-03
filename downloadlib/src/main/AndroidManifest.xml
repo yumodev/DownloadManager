@@ -49,8 +49,7 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.INSTALL_DRM" />
 
-    <application
-        android:label="@string/app_label">
+    <application>
         <provider android:name=".providers.DownloadProvider"
             android:authorities="${applicationId}">
         </provider>
