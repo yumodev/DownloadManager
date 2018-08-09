@@ -26,6 +26,10 @@ class RealSystemFacade implements SystemFacade {
         return System.currentTimeMillis();
     }
 
+    /**
+     * 获取网络类型
+     * @return
+     */
     public Integer getActiveNetworkType() {
         ConnectivityManager connectivity =
                 (ConnectivityManager) mContext.getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -44,6 +48,10 @@ class RealSystemFacade implements SystemFacade {
         return activeInfo.getType();
     }
 
+    /**
+     * 是否在漫游状态
+     * @return
+     */
     public boolean isNetworkRoaming() {
         ConnectivityManager connectivity =
             (ConnectivityManager) mContext.getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -62,6 +70,10 @@ class RealSystemFacade implements SystemFacade {
         return isRoaming;
     }
 
+    /**
+     * 移动网络下载的最大值
+     * @return
+     */
     public Long getMaxBytesOverMobile() {
         try {
             return Settings.Secure.getLong(mContext.getContentResolver(),"download_manager_max_bytes_over_mobile"); // Settings.Secure.DOWNLOAD_MAX_BYTES_OVER_MOBILE
@@ -70,6 +82,10 @@ class RealSystemFacade implements SystemFacade {
         }
     }
 
+    /**
+     * 获取建议的移动网络下载的大小
+     * @return
+     */
     @Override
     public Long getRecommendedMaxBytesOverMobile() {
         try {

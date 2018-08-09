@@ -13,6 +13,5 @@ public class DownloadApp extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
-        DownloadManager.init(this);
     }
 }

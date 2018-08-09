@@ -17,6 +17,7 @@ import android.widget.Toast;
 import com.ymdev.download.providers.DownloadManager;
 import com.yumo.common.io.YmAdFileUtil;
 import com.yumo.common.io.YmFileUtil;
+import com.yumo.common.io.YmSdUtil;
 import com.yumo.common.log.Log;
 import com.yumo.demo.view.YmTestFragment;
 
@@ -33,7 +34,6 @@ import okhttp3.Request;
 import okhttp3.Response;
 
 import static com.ymdev.download.providers.Downloads.COLUMN_STATUS;
-import static com.ymdev.download.providers.Downloads.isStatusClientError;
 
 /**
  * Created by yumo on 2018/6/28.
@@ -44,13 +44,17 @@ public class DownloadLibTest extends YmTestFragment {
 
     private static final String DOWNLOAD_MANAGER_PACKAGE_NAME = "com.android.providers.downloads";
 
+    /**
+     * 当前下载id
+     */
     private long mDownloadId = 0L;
     //private String mApkUrl = "https://qd.myapp.com/myapp/qqteam/AndroidQQ/mobileqq_android.apk";
-    private String mApkUrl = "https://pro-app-qn.fir.im/c8582d2daa700aac7cb0762c5833e8c6866e651c.apk?attname=app-release.apk_1.0.1.apk&e=1530102591&token=LOvmia8oXF4xnLh0IdH05XMYpH6ENHNpARlmPc-T:jUmGVC1RGtKBBqxN0zUOAmmZUDw=";
+    //private String mApkUrl = "https://pro-app-qn.fir.im/c8582d2daa700aac7cb0762c5833e8c6866e651c.apk?attname=app-release.apk_1.0.1.apk&e=1530102591&token=LOvmia8oXF4xnLh0IdH05XMYpH6ENHNpARlmPc-T:jUmGVC1RGtKBBqxN0zUOAmmZUDw=";
     //private String mApkUrl = "http://pic32.nipic.com/20130823/12976223_141018174311_2.jpg";
-    private String mDirName = Environment.getDownloadCacheDirectory().getAbsolutePath();
+    private String mApkUrl = "http://192.168.1.15:5000/static/zebra-car-wst-2.0.2-release.apk";
 
     private DownloadManager mDownloadManager = null;
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -62,13 +66,25 @@ public class DownloadLibTest extends YmTestFragment {
         super.onResume();
     }
 
-
+    /**
+     * 生成下载目录
+     */
     public void testDownloadDir(){
-        String dir = Environment.getExternalStorageDirectory()+File.separator+getTestDownloadDir();
+        String dir = "";
+        if (YmSdUtil.isSdCardExist()){
+            dir = Environment.getExternalStoragePublicDirectory(getTestDownloadDir()).getPath();
+        }else{
+            dir = getActivity().getExternalFilesDir(getTestDownloadDir()).getPath();
+        }
+
         YmFileUtil.createDirectory(dir);
         showToastMessage(getTestDownloadDir());
     }
 
+    /**
+     * 默认下载目录为sdcard/<packagename>/download
+     * @return
+     */
     private String getTestDownloadDir(){
         return getContext().getPackageName()+File.separator+"download";
     }
@@ -76,7 +92,58 @@ public class DownloadLibTest extends YmTestFragment {
      * 测试一个最简单的下载功能
      */
     public void testDownload(){
-        download(getContext(), mApkUrl, getActivity().getExternalCacheDir().getPath(), YmFileUtil.getFileNameFromPath(mApkUrl));
+        download(getContext(), mApkUrl, getTestDownloadDir(), YmFileUtil.getFileNameFromPath(mApkUrl));
+    }
+
+    /**
+     * 测试一个最简单的下载功能
+     */
+    public void testDownload1(){
+        String dirName = getTestDownloadDir();
+        String fileName =(Uri.parse(mApkUrl)).getLastPathSegment();
+        downloadApk(getContext(), mApkUrl, dirName, fileName);
+    }
+
+    /**
+     * 直接下载安装, 非利用DownloadManager
+     */
+    public void testDownloadAndApk(){
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                final String fileName = YmAdFileUtil.getFileCachePath(getContext()) + File.separator + "test.apk";
+                downFile(mApkUrl, fileName);
+                getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        installAPK(fileName);
+                    }
+                });
+
+            }
+        }).start();
+    }
+
+    /**
+     * 暂停下载
+     */
+    public void testPauseDownload(){
+
+    }
+
+    /**
+     * 重新下载
+     */
+    public void testRetryDownlaod(){
+        mDownloadManager.restartDownload(mDownloadId);
+    }
+
+
+    public void testCancelDownload(){
+        mDownloadManager.remove(mDownloadId);
+    }
+
+    public void testExistFile(){
     }
 
     private void download(Context context, String url, String dirName, String fileName){
@@ -89,77 +156,30 @@ public class DownloadLibTest extends YmTestFragment {
         mDownloadId = mDownloadManager.enqueue(request);
     }
 
-    public void testPauseDownload(){
-
-    }
-
     /**
-     * 测试一个最简单的下载功能
-     */
-    public void testDownload1(){
-        String dirName = getTestDownloadDir();
-        String fileName =(Uri.parse(mApkUrl)).getLastPathSegment();
-        downloadApk(getContext(), mApkUrl, dirName, fileName);
-    }
-
+     * 打开系统下载管理页面
+      */
     public void testOpenManager(){
         Intent intent = new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
         intent.setData(Uri.parse("package:" + DOWNLOAD_MANAGER_PACKAGE_NAME));
         getContext().startActivity(intent);
-
     }
 
-    public void testRetryDownlaod(){
-        mDownloadManager.restartDownload(mDownloadId);
-    }
 
     /**
-     * Cancel downloads and remove them from the download manager.  Each download will be stopped if
-     * it was running, and it will no longer be accessible through the download manager.
-     * If there is a downloaded file, partial or complete, it is deleted.
-     *
+     * 显示全部下载记录
      */
-    public void testCancelDownload(){
-        mDownloadManager.remove(mDownloadId);
-    }
-
-    /**
-     * setDestinationInExternalFilesDir(Context context, String dirType, String subPath)
-     * setDestinationInExternalPublicDir(String dirType, String subPath)
-     */
-    public void testSetPath(){
-
-    }
-
     public void testPrintAllDownload(){
-        printAllDownload();
-    }
-
-    private void printAllDownload(){
-        DownloadManager.Query query = new DownloadManager.Query();
-        query.setFilterByStatus(DownloadManager.STATUS_SUCCESSFUL|DownloadManager.STATUS_FAILED|DownloadManager.STATUS_PAUSED|DownloadManager.STATUS_RUNNING|DownloadManager.STATUS_PENDING);
-        //DownloadManager downloadManager = (DownloadManager)getContext().getSystemService(Context.DOWNLOAD_SERVICE);
-
-        Cursor c = mDownloadManager.query(query);
-        while (c.moveToNext()){
-            Download download = new Download();
-            download.id = c.getLong(c.getColumnIndex(DownloadManager.COLUMN_ID));
-            download.title = c.getString(c.getColumnIndex(DownloadManager.COLUMN_TITLE));
-            download.description = c.getString(c.getColumnIndex(DownloadManager.COLUMN_DESCRIPTION));
-            download.url = c.getString(c.getColumnIndex(DownloadManager.COLUMN_URI));
-            download.status = c.getInt(c.getColumnIndex(DownloadManager.COLUMN_STATUS));
-            download.totalBytesSize = c.getLong(c.getColumnIndex(DownloadManager.COLUMN_TOTAL_SIZE_BYTES));
-            download.bytesDownloadSoFar = c.getLong(c.getColumnIndex(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR));
-            download.mediaType = c.getString(c.getColumnIndex(DownloadManager.COLUMN_MEDIA_TYPE));
-            download.mediappoviderUrl = c.getString(c.getColumnIndex(DownloadManager.COLUMN_MEDIAPROVIDER_URI));
-            download.localFileName = getLocalFilePath(c);
-            download.reason = c.getString(c.getColumnIndex(DownloadManager.COLUMN_REASON));
-            download.lastModefiedTime = c.getLong(c.getColumnIndex(DownloadManager.COLUMN_LAST_MODIFIED_TIMESTAMP));
-            Log.i(Log.LIB_TAG, download.toString());
+        List<Download> dataList = getAllDownload();
+        for (Download download : dataList){
+            Log.i(LOG_TAG, download.toString());
+            showToastMessage(download.toString());
         }
-        c.close();
     }
 
+    /**
+     * 通过Url获取下载id
+     */
     public void testGetDownloadIdFromUrl(){
         List<Download> downloads = getDownloadIdFromUrl(mApkUrl);
         for (Download download : downloads){
@@ -169,34 +189,32 @@ public class DownloadLibTest extends YmTestFragment {
         }
     }
 
+    /**
+     * 检测当前的下载状态
+     */
+    public void testCheckStatus(){
+        Download download = getDownloadById(mDownloadId);
+        if (download != null){
+            showToastMessage(download.toString());
+        }else{
+            showToastMessage("不存在数据");
+        }
+    }
+
     private List<Download> getDownloadIdFromUrl(String url){
         DownloadManager.Query query = new DownloadManager.Query();
         List<Download> list = new ArrayList<>();
         Cursor c = mDownloadManager.query(query);
         while (c.moveToNext()){
-            Download download = new Download();
-            download.url = c.getString(c.getColumnIndex(DownloadManager.COLUMN_URI));
-            showToastMessage(c.getString(c.getColumnIndex(DownloadManager.COLUMN_LOCAL_URI)));
-            if (!url.equals(url)){
+            Download download = convertDownload(c);
+            if (!download.url.equals(url)){
                 continue;
             }
-            download.status = c.getInt(c.getColumnIndex(DownloadManager.COLUMN_STATUS));
+
             if (download.status == DownloadManager.STATUS_FAILED){
                 mDownloadManager.remove(download.id);
                 continue;
             }
-            download.id = c.getLong(c.getColumnIndex(DownloadManager.COLUMN_ID));
-            download.title = c.getString(c.getColumnIndex(DownloadManager.COLUMN_TITLE));
-            download.description = c.getString(c.getColumnIndex(DownloadManager.COLUMN_DESCRIPTION));
-
-
-            download.totalBytesSize = c.getLong(c.getColumnIndex(DownloadManager.COLUMN_TOTAL_SIZE_BYTES));
-            download.bytesDownloadSoFar = c.getLong(c.getColumnIndex(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR));
-            download.mediaType = c.getString(c.getColumnIndex(DownloadManager.COLUMN_MEDIA_TYPE));
-            download.mediappoviderUrl = c.getString(c.getColumnIndex(DownloadManager.COLUMN_MEDIAPROVIDER_URI));
-            download.localFileName = getLocalFilePath(c);
-            download.reason = c.getString(c.getColumnIndex(DownloadManager.COLUMN_REASON));
-            download.lastModefiedTime = c.getLong(c.getColumnIndex(DownloadManager.COLUMN_LAST_MODIFIED_TIMESTAMP));
             Log.i(Log.LIB_TAG, download.toString());
             list.add(download);
         }
@@ -205,35 +223,6 @@ public class DownloadLibTest extends YmTestFragment {
         return list;
     }
 
-
-    public void testCheckStatus(){
-        checkStatus(mDownloadId);
-    }
-
-    private void checkStatus(long taskId){
-        DownloadManager.Query query = new DownloadManager.Query();
-        query.setFilterById(taskId);
-        Cursor c = mDownloadManager.query(query);
-        if(c.moveToFirst()){
-            int status = c.getInt(c.getColumnIndex(DownloadManager.COLUMN_STATUS));
-            int fileUriIdx = c.getColumnIndex(DownloadManager.COLUMN_LOCAL_URI);
-            String fileUri = c.getString(fileUriIdx);
-            String fileName = null;
-            if (Build.VERSION.SDK_INT > Build.VERSION_CODES.M) {
-                if (fileUri != null) {
-                    fileName = Uri.parse(fileUri).getPath();
-                }
-            } else {
-                //Android 7.0以上的方式：请求获取写入权限，这一步报错
-                //过时的方式：DownloadManager.COLUMN_LOCAL_FILENAME
-//                int fileNameIdx = c.getColumnIndex(DownloadManager.COLUMN_LOCAL_FILENAME);
-//                fileName = c.getString(fileNameIdx);
-            }
-            Log.i(Log.LIB_TAG, "fileName:"+fileName+" "+status);
-
-        }
-        c.close();
-    }
 
     public void testCheckStatusByUri(){
         DownloadManager.Query query = new DownloadManager.Query();
@@ -257,23 +246,6 @@ public class DownloadLibTest extends YmTestFragment {
 
         }
         c.close();
-    }
-
-    private String getLocalFilePath(Cursor c){
-        int fileUriIdx = c.getColumnIndex(DownloadManager.COLUMN_LOCAL_URI);
-        String fileUri = c.getString(fileUriIdx);
-        String fileName = null;
-        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.M) {
-            if (fileUri != null) {
-                fileName = Uri.parse(fileUri).getPath();
-            }
-        } else {
-            //Android 7.0以上的方式：请求获取写入权限，这一步报错
-            //过时的方式：DownloadManager.COLUMN_LOCAL_FILENAME
-            int fileNameIdx = c.getColumnIndex(DownloadManager.COLUMN_LOCAL_URI);
-            fileName = c.getString(fileNameIdx);
-        }
-        return fileName;
     }
 
     private void downloadApk(Context context, String url, String path, String name){
@@ -313,52 +285,21 @@ public class DownloadLibTest extends YmTestFragment {
     private BroadcastReceiver receiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            checkStatus(getContext(), intent);
+            long downloadId = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1);
+            Download download = getDownloadById(downloadId);
+            if (download.status == DownloadManager.STATUS_SUCCESSFUL){
+                installAPK(context, downloadId);
+            }
+            showToastMessage(download.toString());
         }
     };
 
-    //检查下载状态
-    private void checkStatus(Context context, Intent intent) {
-        DownloadManager.Query query = new DownloadManager.Query();
-        long downloadId = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1);
-        //通过下载的id查找
-        query.setFilterById(downloadId);
-        Cursor c = mDownloadManager.query(query);
-        if (c.moveToFirst()) {
-            int status = c.getInt(c.getColumnIndex(DownloadManager.COLUMN_STATUS));
-            String filename = getLocalFilePath(c);
-            switch (status) {
-                //下载暂停
-                case DownloadManager.STATUS_PAUSED:
-                    Log.i(Log.LIB_TAG, "下载暂停");
-                    break;
-                //下载延迟
-                case DownloadManager.STATUS_PENDING:
-                    Log.i(Log.LIB_TAG, "下载延迟");
-                    break;
-                //正在下载
-                case DownloadManager.STATUS_RUNNING:
-                    Log.i(Log.LIB_TAG, "下载中");
-                    break;
-                //下载完成
-                case DownloadManager.STATUS_SUCCESSFUL:
-                    Log.i(Log.LIB_TAG, "下载完成");
-                    //下载完成安装APK
-                    Toast.makeText(context, filename, Toast.LENGTH_SHORT).show();
-                    installAPK(context, downloadId);
-                    break;
-                case DownloadManager.STATUS_FAILED:
-                    Log.i(Log.LIB_TAG, "下载失败");
-                    break;
-            }
-        }
-        c.close();
-    }
 
     //下载到本地后执行安装
     private void installAPK(Context context, long downloadId) {
         //获取下载文件的Uri
-        Uri downloadFileUri = getUriForDownloadedFile(downloadId);
+        Download download = getDownloadById(downloadId);
+        Uri downloadFileUri = Uri.parse(download.localFileUri);
         if (downloadFileUri != null) {
             Intent intent= new Intent(Intent.ACTION_VIEW);
             intent.setDataAndType(downloadFileUri, "application/vnd.android.package-archive");
@@ -367,61 +308,6 @@ public class DownloadLibTest extends YmTestFragment {
             context.unregisterReceiver(receiver);
         }
     }
-
-    /**
-     * Returns the {@link Uri} of the given downloaded file id, if the file is
-     * downloaded successfully. Otherwise, null is returned.
-     *
-     * @param id the id of the downloaded file.
-     * @return the {@link Uri} of the given downloaded file id, if download was
-     *         successful. null otherwise.
-     */
-    public Uri getUriForDownloadedFile(long id) {
-        // to check if the file is in cache, get its destination from the database
-       DownloadManager.Query query = new DownloadManager.Query().setFilterById(id);
-        Cursor cursor = null;
-        try {
-            cursor = mDownloadManager.query(query);
-            if (cursor == null) {
-                return null;
-            }
-            if (cursor.moveToFirst()) {
-                int status = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_STATUS));
-                String filePath = getLocalFilePath(cursor);
-                if (android.app.DownloadManager.STATUS_SUCCESSFUL == status) {
-                    //return ContentUris.withAppendedId(Downloads.Impl.ALL_DOWNLOADS_CONTENT_URI, id);
-                    int fileUriIdx = cursor.getColumnIndex(DownloadManager.COLUMN_LOCAL_URI);
-                    String fileUri = cursor.getString(fileUriIdx);
-                    return Uri.parse(fileUri);
-                }
-            }
-        } finally {
-            if (cursor != null) {
-                cursor.close();
-            }
-        }
-        // downloaded file not found or its status is not 'successfully completed'
-        return null;
-    }
-
-
-    public void testDownloadAndApk(){
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                final String fileName = YmAdFileUtil.getFileCachePath(getContext()) + File.separator + "test.apk";
-                downFile(mApkUrl, fileName);
-                getActivity().runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        installAPK(fileName);
-                    }
-                });
-
-            }
-        }).start();
-    }
-
 
     //下载到本地后执行安装
     private void installAPK(String fileName) {
@@ -473,6 +359,50 @@ public class DownloadLibTest extends YmTestFragment {
         return (new File(fileName)).length();
     }
 
+    //检查下载状态
+    private  Download getDownloadById(long downloadId) {
+        DownloadManager.Query query = new DownloadManager.Query();
+        //通过下载的id查找
+        query.setFilterById(downloadId);
+        Cursor c = mDownloadManager.query(query);
+        Download download = null;
+        if (c.moveToFirst()) {
+            download = convertDownload(c);
+        }
+        c.close();
+
+        return download;
+    }
+
+    private List<Download> getAllDownload(){
+        DownloadManager.Query query = new DownloadManager.Query();
+        List<Download> list = new ArrayList<>();
+        Cursor c = mDownloadManager.query(query);
+        while (c.moveToNext()){
+            Download download = convertDownload(c);
+            list.add(download);
+        }
+        c.close();
+        return list;
+    }
+
+    private Download convertDownload(Cursor c){
+        Download download = new Download();
+        download.id = c.getLong(c.getColumnIndex(DownloadManager.COLUMN_ID));
+        download.title = c.getString(c.getColumnIndex(DownloadManager.COLUMN_TITLE));
+        download.description = c.getString(c.getColumnIndex(DownloadManager.COLUMN_DESCRIPTION));
+        download.url = c.getString(c.getColumnIndex(DownloadManager.COLUMN_URI));
+        download.status = c.getInt(c.getColumnIndex(DownloadManager.COLUMN_STATUS));
+        download.totalBytesSize = c.getLong(c.getColumnIndex(DownloadManager.COLUMN_TOTAL_SIZE_BYTES));
+        download.bytesDownloadSoFar = c.getLong(c.getColumnIndex(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR));
+        download.mediaType = c.getString(c.getColumnIndex(DownloadManager.COLUMN_MEDIA_TYPE));
+        download.mediappoviderUrl = c.getString(c.getColumnIndex(DownloadManager.COLUMN_MEDIAPROVIDER_URI));
+        download.localFileUri = c.getString(c.getColumnIndex(DownloadManager.COLUMN_LOCAL_URI));
+        download.reason = c.getString(c.getColumnIndex(DownloadManager.COLUMN_REASON));
+        download.lastModefiedTime = c.getLong(c.getColumnIndex(DownloadManager.COLUMN_LAST_MODIFIED_TIMESTAMP));
+        return download;
+    }
+
     public static class Download{
         public long id;
         public String title;
@@ -486,7 +416,11 @@ public class DownloadLibTest extends YmTestFragment {
         public long lastModefiedTime;
         public String mediappoviderUrl;
         public String allowWrite;
-        public String localFileName;
+        public String localFileUri;
+
+        public String getLocalFileName(){
+            return Uri.parse(localFileUri).getPath();
+        }
 
         @Override
         public String toString() {
@@ -503,7 +437,7 @@ public class DownloadLibTest extends YmTestFragment {
             sb.append("\nlastModefiedTime:"+lastModefiedTime);
             sb.append("\nmediappoviderUrl:"+mediappoviderUrl);
             sb.append("\nallowWrite:"+allowWrite);
-            sb.append("\nlocalFileName:"+localFileName);
+            sb.append("\nlocalFileName:"+localFileUri);
             return sb.toString();
 
         }

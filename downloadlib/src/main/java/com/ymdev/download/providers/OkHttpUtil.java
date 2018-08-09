@@ -38,15 +38,23 @@ public class OkHttpUtil {
         @Override
         public okhttp3.Response intercept(Chain chain) throws IOException {
             Request request = chain.request();
-            Log.d(TAG, "request:" + request.toString());
+            if (Constants.LOGV){
+                Log.d(TAG, "request:" + request.toString());
+            }
+
             long t1 = System.nanoTime();
             okhttp3.Response response = chain.proceed(chain.request());
             long t2 = System.nanoTime();
-            Log.v(TAG, String.format(Locale.getDefault(), "Received response for %s in %.1fms%n%s",
-                    response.request().url(), (t2 - t1) / 1e6d, response.headers()));
+            if (Constants.LOGV){
+                Log.v(TAG, String.format(Locale.getDefault(), "Received response for %s in %.1fms%n%s",
+                        response.request().url(), (t2 - t1) / 1e6d, response.headers()));
+            }
+
             okhttp3.MediaType mediaType = response.body().contentType();
             String content = response.body().string();
-            Log.i(TAG, "response body:" + content);
+            if (Constants.LOGV){
+                Log.i(TAG, "response body:" + content);
+            }
             return response.newBuilder()
                     .body(okhttp3.ResponseBody.create(mediaType, content))
                     .build();

@@ -43,9 +43,16 @@ public class DownloadReceiver extends BroadcastReceiver {
         }
 
         String action = intent.getAction();
+        Log.v(Constants.TAG, "DownloadReceiver action:");
+        /**
+         * 收到开机广播启动服务。
+         */
         if (action.equals(Intent.ACTION_BOOT_COMPLETED)) {
             startService(context);
         } else if (action.equals(ConnectivityManager.CONNECTIVITY_ACTION)) {
+            /**
+             * 手动网络变化启动服务
+             */
             NetworkInfo info = (NetworkInfo)
                     intent.getParcelableExtra(ConnectivityManager.EXTRA_NETWORK_INFO);
             if (info != null && info.isConnected()) {

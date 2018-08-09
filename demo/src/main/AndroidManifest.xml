@@ -16,7 +16,7 @@
         android:name=".DownloadApp">
 
         <activity
-            android:name=".DownloadList"
+            android:name=".DownloadActivity"
             android:launchMode="singleTop">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

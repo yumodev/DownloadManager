@@ -190,6 +190,7 @@ public final class Downloads {
      * value.
      * <P>Type: BIGINT</P>
      * <P>Owner can Read</P>
+     * 最后一次更新状态的时间
      * @hide
      */
     public static final String COLUMN_LAST_MODIFICATION = "lastmod";
@@ -201,6 +202,7 @@ public final class Downloads {
      * <P>Type: TEXT</P>
      * <P>Owner can Init/Read</P>
      * @hide
+     *
      */
     public static final String COLUMN_NOTIFICATION_PACKAGE = "notificationpackage";
 
@@ -258,6 +260,8 @@ public final class Downloads {
      * <P>Type: INTEGER</P>
      * <P>Owner can Read</P>
      * @hide
+     *
+     * 总的大小
      */
     public static final String COLUMN_TOTAL_BYTES = "total_bytes";
 
@@ -267,6 +271,8 @@ public final class Downloads {
      * <P>Type: INTEGER</P>
      * <P>Owner can Read</P>
      * @hide
+     *
+     * 目前下载的大小
      */
     public static final String COLUMN_CURRENT_BYTES = "current_bytes";
 
@@ -432,12 +438,14 @@ public final class Downloads {
 
     /**
      * This download hasn't stated yet
+     * 未开始下载
      * @hide
      */
     public static final int STATUS_PENDING = 190;
 
     /**
      * This download has started
+     * 正在下载
      * @hide
      */
     public static final int STATUS_RUNNING = 192;
@@ -447,6 +455,7 @@ public final class Downloads {
      * Warning: there might be other status values that indicate success
      * in the future.
      * Use isSucccess() to capture the entire category.
+     * 下载成功
      * @hide
      */
     public static final int STATUS_SUCCESS = 200;
@@ -454,6 +463,7 @@ public final class Downloads {
     /**
      * This request couldn't be parsed. This is also used when processing
      * requests with unknown/unsupported URI schemes.
+     * 无效的请求，网址u 无。
      * @hide
      */
     public static final int STATUS_BAD_REQUEST = 400;
@@ -461,6 +471,7 @@ public final class Downloads {
     /**
      * This download can't be performed because the content type cannot be
      * handled.
+     * 未能处理下载
      * @hide
      */
     public static final int STATUS_NOT_ACCEPTABLE = 406;
@@ -473,6 +484,7 @@ public final class Downloads {
      * client when a response is received whose length cannot be determined
      * accurately (therefore making it impossible to know when a download
      * completes).
+     * 未能获取长度
      * @hide
      */
     public static final int STATUS_LENGTH_REQUIRED = 411;
@@ -487,6 +499,7 @@ public final class Downloads {
 
     /**
      * This download was canceled
+     * 取消下载
      * @hide
      */
     public static final int STATUS_CANCELED = 490;
@@ -495,6 +508,7 @@ public final class Downloads {
      * This download has completed with an error.
      * Warning: there will be other status values that indicate errors in
      * the future. Use isStatusError() to capture the entire category.
+     * 未知错误
      * @hide
      */
     public static final int STATUS_UNKNOWN_ERROR = 491;
@@ -504,6 +518,7 @@ public final class Downloads {
      * Typically, that's because the filesystem is missing or full.
      * Use the more specific {@link #STATUS_INSUFFICIENT_SPACE_ERROR}
      * and {@link #STATUS_DEVICE_NOT_FOUND_ERROR} when appropriate.
+     * 文件错误
      * @hide
      */
     public static final int STATUS_FILE_ERROR = 492;
@@ -512,6 +527,7 @@ public final class Downloads {
      * This download couldn't be completed because of an HTTP
      * redirect response that the download manager couldn't
      * handle.
+     * 有无法处理的重定向
      * @hide
      */
     public static final int STATUS_UNHANDLED_REDIRECT = 493;
@@ -519,6 +535,7 @@ public final class Downloads {
     /**
      * This download couldn't be completed because of an
      * unspecified unhandled HTTP code.
+     * 发生未名网络错误
      * @hide
      */
     public static final int STATUS_UNHANDLED_HTTP_CODE = 494;
@@ -526,6 +543,7 @@ public final class Downloads {
     /**
      * This download couldn't be completed because of an
      * error receiving or processing data at the HTTP level.
+     * 接收处理数据的时候出错了。
      * @hide
      */
     public static final int STATUS_HTTP_DATA_ERROR = 495;
@@ -533,6 +551,7 @@ public final class Downloads {
     /**
      * This download couldn't be completed because of an
      * HttpException while setting up the request.
+     * 网络异常
      * @hide
      */
     public static final int STATUS_HTTP_EXCEPTION = 496;
@@ -540,6 +559,7 @@ public final class Downloads {
     /**
      * This download couldn't be completed because there were
      * too many redirects.
+     * 有太多重定向了。
      * @hide
      */
     public static final int STATUS_TOO_MANY_REDIRECTS = 497;
@@ -547,6 +567,8 @@ public final class Downloads {
     /**
      * This download couldn't be completed due to insufficient storage
      * space.  Typically, this is because the SD card is full.
+     *
+     * sd卡没有空间了。
      * @hide
      */
     public static final int STATUS_INSUFFICIENT_SPACE_ERROR = 498;
@@ -556,12 +578,14 @@ public final class Downloads {
      * device was found.  Typically, this is because the SD card is not
      * mounted.
      * @hide
+     * 没有外部sd卡
      */
     public static final int STATUS_DEVICE_NOT_FOUND_ERROR = 499;
 
     /**
      * This download is visible but only shows in the notifications
      * while it's in progress.
+     * 只在通知栏显示
      * @hide
      */
     public static final int VISIBILITY_VISIBLE = 0;
@@ -570,11 +594,13 @@ public final class Downloads {
      * This download is visible and shows in the notifications while
      * in progress and after completion.
      * @hide
+     * 下载完成显示
      */
     public static final int VISIBILITY_VISIBLE_NOTIFY_COMPLETED = 1;
 
     /**
      * This download doesn't show in the UI or in the notifications.
+     * 不在通知栏显示。
      * @hide
      */
     public static final int VISIBILITY_HIDDEN = 2;
@@ -614,6 +640,7 @@ public final class Downloads {
 
         /**
          * The permission to send broadcasts on download completion
+         * 允许发送下载完成的广播
          */
         public static String PERMISSION_SEND_INTENTS =
                 AUTHORITY+".permission.SEND_DOWNLOAD_COMPLETED_INTENTS";
@@ -621,12 +648,14 @@ public final class Downloads {
         /**
          * The permission to download files to the cache partition that won't be automatically
          * purged when space is needed.
+         * 将文件下载到缓存分区的权限，在需要空间时不会自动清除该分区
          */
         public static String PERMISSION_CACHE_NON_PURGEABLE =
                 AUTHORITY+".permission.DOWNLOAD_CACHE_NON_PURGEABLE";
 
         /**
          * The permission to download files without any system notification being shown.
+         * 在不显示任何系统通知的情况下下载文件的权限
          */
         public static String PERMISSION_NO_NOTIFICATION =
                 AUTHORITY+".permission.DOWNLOAD_WITHOUT_NOTIFICATION";
@@ -646,6 +675,8 @@ public final class Downloads {
          * Broadcast Action: this is sent by the download manager to the app
          * that had initiated a download when that download completes. The
          * download's content: uri is specified in the intent's data.
+         *
+         * 下载完成的广播
          */
         public static final String ACTION_DOWNLOAD_COMPLETED =
                 "android.intent.action.DOWNLOAD_COMPLETED";
@@ -659,6 +690,8 @@ public final class Downloads {
          * multiple downloads.
          * Note: this is not currently sent for downloads that have completed
          * successfully.
+         *
+         * 点击一个下载项的通知。
          */
         public static final String ACTION_NOTIFICATION_CLICKED =
                 "android.intent.action.DOWNLOAD_NOTIFICATION_CLICKED";
@@ -667,6 +700,8 @@ public final class Downloads {
          * The name of the column containing the URI of the data being downloaded.
          * <P>Type: TEXT</P>
          * <P>Owner can Init/Read</P>
+         *
+         * 包含正在下载的数据的URI的列的名称。
          */
         public static final String COLUMN_URI = "uri";
 
@@ -674,6 +709,7 @@ public final class Downloads {
          * The name of the column containing application-specific data.
          * <P>Type: TEXT</P>
          * <P>Owner can Init/Read/Write</P>
+         * The name of the column containing application-specific data
          */
         public static final String COLUMN_APP_DATA = "entity";
 
@@ -687,6 +723,14 @@ public final class Downloads {
          * whether a download fully completed).
          * <P>Type: BOOLEAN</P>
          * <P>Owner can Init</P>
+         *
+         * 包含指示是否使用标志的列的名称
+         启动应用程序能够验证的完整性
+         下载的文件。设置此标志时，下载管理器
+         执行下载并报告成功，即使在某些情况下
+         它不能保证下载已经完成(例如在执行时)
+         没有ETag的字节范围请求，或者无法确定的时候
+         下载是否完全完成)
          */
         public static final String COLUMN_NO_INTEGRITY = "no_integrity";
 
@@ -696,6 +740,10 @@ public final class Downloads {
          * to use this filename, or a variation, as the actual name for the file.
          * <P>Type: TEXT</P>
          * <P>Owner can Init</P>
+         *
+         * 包含发起的文件名的列的名称
+         应用程序的建议。如果可能，下载管理器将尝试
+         使用此文件名或变体作为文件的实际名称
          */
         public static final String COLUMN_FILE_NAME_HINT = "hint";
 
@@ -704,6 +752,9 @@ public final class Downloads {
          * was actually stored.
          * <P>Type: TEXT</P>
          * <P>Owner can Read</P>
+         *
+         * 包含下载数据所在的文件名的列的名称
+         实际上是存储
          */
         public static final String _DATA = "_data";
 
@@ -737,6 +788,10 @@ public final class Downloads {
          * the CONTROL_* constants for a list of legal values.
          * <P>Type: INTEGER</P>
          * <P>Owner can Read</P>
+         * 包含下载的当前控制状态的列的名称。
+         应用程序可以写这个来控制(暂停/恢复)下载。
+         一个合法值列表的CONTROL_*常量
+         *
          */
         public static final String COLUMN_CONTROL = "control";
 
@@ -901,6 +956,8 @@ public final class Downloads {
          * when MediaProvider database also deletes the metadata asociated with this downloaded file.
          * <P>Type: BOOLEAN</P>
          * <P>Owner can Read</P>
+         * 如果删除此下载，则设置为true。它完全从数据库中删除
+         * 当MediaProvider数据库也删除与此下载文件关联的元数据时
          */
         public static final String COLUMN_DELETED = "deleted";
 

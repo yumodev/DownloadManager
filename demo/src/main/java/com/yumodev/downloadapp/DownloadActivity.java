@@ -61,10 +61,10 @@ import java.util.Set;
 /**
  *  View showing a list of all downloads the Download Manager knows about.
  */
-public class DownloadList extends Activity
+public class DownloadActivity extends Activity
         implements OnChildClickListener, OnItemClickListener, DownloadItem.DownloadSelectListener,
         OnClickListener, OnCancelListener {
-    private static final String LOG_TAG = "DownloadList";
+    private static final String LOG_TAG = "DownloadActivity";
 
     private ExpandableListView mDateOrderedListView;
     private ListView mSizeOrderedListView;

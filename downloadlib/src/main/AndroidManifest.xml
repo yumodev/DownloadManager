@@ -54,6 +54,7 @@
             android:authorities="${applicationId}">
         </provider>
         <service android:name=".providers.DownloadService"/>
+
         <receiver android:name=".providers.DownloadReceiver" android:exported="false">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />

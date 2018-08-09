@@ -167,7 +167,6 @@ public class DownloadThread extends Thread {
 
                 InnerState innerState = new InnerState();
 
-
                 setupDestinationFile(state, innerState);
                 addRequestHeaders(innerState, builder);
 
@@ -823,7 +822,6 @@ public class DownloadThread extends Thread {
     private void addRequestHeaders(InnerState innerState, Request.Builder builder) {
         for (Pair<String, String> header : mInfo.getHeaders()) {
             builder.addHeader(header.first, header.second);
-
         }
 
         if (innerState.mContinuingDownload) {

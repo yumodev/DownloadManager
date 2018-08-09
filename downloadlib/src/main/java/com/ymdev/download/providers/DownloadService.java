@@ -193,6 +193,9 @@ public class DownloadService extends Service {
             mSystemFacade = new RealSystemFacade(this);
         }
 
+        /**
+         * 注册监听器
+         */
         mObserver = new DownloadManagerContentObserver();
         getContentResolver().registerContentObserver(Downloads.Impl.ALL_DOWNLOADS_CONTENT_URI,
                 true, mObserver);
@@ -232,6 +235,9 @@ public class DownloadService extends Service {
      * Parses data from the content provider into private array
      */
     private void updateFromProvider() {
+        if (Constants.LOGV){
+            Log.i(Constants.TAG, "updateFromProvider");
+        }
         synchronized (this) {
             mPendingUpdate = true;
             if (mUpdateThread == null) {
@@ -450,7 +456,7 @@ public class DownloadService extends Service {
 
     /**
      * Drops old rows from the database to prevent it from growing too large
-     * 删除多余的下载数据
+     * 删除多余数据，最大200条
      */
     private void trimDatabase() {
         Cursor cursor = getContentResolver().query(Downloads.Impl.ALL_DOWNLOADS_CONTENT_URI,
@@ -481,6 +487,7 @@ public class DownloadService extends Service {
     /**
      * Keeps a local copy of the info about a download, and initiates the
      * download if appropriate.
+     * 开始下载
      */
     private DownloadInfo insertDownload(DownloadInfo.Reader reader, long now) {
         DownloadInfo info = reader.newDownloadInfo(this, mSystemFacade);

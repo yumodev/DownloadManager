@@ -16,7 +16,6 @@
 
 package com.ymdev.download.providers;
 
-import android.app.Application;
 import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.ContentValues;
@@ -28,6 +27,7 @@ import android.net.Uri;
 import android.os.Environment;
 import android.os.ParcelFileDescriptor;
 import android.provider.BaseColumns;
+import android.util.Log;
 import android.util.Pair;
 
 import java.io.File;
@@ -82,7 +82,7 @@ public class DownloadManager {
      * Internet Media Type of the downloaded file.  If no value is provided upon creation, this will
      * initially be null and will be filled in based on the server's response once the download has
      * started.
-     *
+     * 若无设置为null，下载完成后根据http返回的类型填充。
      * @see <a href="http://www.ietf.org/rfc/rfc1590.txt">RFC 1590, defining Media Types</a>
      */
     public final static String COLUMN_MEDIA_TYPE = "media_type";
@@ -90,6 +90,7 @@ public class DownloadManager {
     /**
      * Total size of the download in bytes.  This will initially be -1 and will be filled in once
      * the download starts.
+     * 初始为-1，当下载开始的时候就填入值。
      */
     public final static String COLUMN_TOTAL_SIZE_BYTES = "total_size";
 
@@ -97,11 +98,13 @@ public class DownloadManager {
      * Uri where downloaded file will be stored.  If a destination is supplied by client, that URI
      * will be used here.  Otherwise, the value will initially be null and will be filled in with a
      * generated URI once the download has started.
+     * 初始为null，下载开始的时候生成值。
      */
     public final static String COLUMN_LOCAL_URI = "local_uri";
 
     /**
      * Current status of the download, as one of the STATUS_* constants.
+     * 下载状态
      */
     public final static String COLUMN_STATUS = "status";
 
@@ -121,6 +124,7 @@ public class DownloadManager {
      *
      * @see <a href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec6.html#sec6.1.1">RFC 2616
      * status codes</a>
+     * 失败的原因
      */
     public final static String COLUMN_REASON = "reason";
 
@@ -140,31 +144,37 @@ public class DownloadManager {
      * The URI to the corresponding entry in MediaProvider for this downloaded entry. It is
      * used to delete the entries from MediaProvider database when it is deleted from the
      * downloaded list.
+     * 在MediaProvider中对应条目的URL。
      */
     public static final String COLUMN_MEDIAPROVIDER_URI = "mediaprovider_uri";
 
     /**
      * Value of {@link #COLUMN_STATUS} when the download is waiting to start.
+     * 未开始
      */
     public final static int STATUS_PENDING = 1 << 0;
 
     /**
      * Value of {@link #COLUMN_STATUS} when the download is currently running.
+     * 正在下载
      */
     public final static int STATUS_RUNNING = 1 << 1;
 
     /**
      * Value of {@link #COLUMN_STATUS} when the download is waiting to retry or resume.
+     * 暂停
      */
     public final static int STATUS_PAUSED = 1 << 2;
 
     /**
      * Value of {@link #COLUMN_STATUS} when the download has successfully completed.
+     * 下载成功
      */
     public final static int STATUS_SUCCESSFUL = 1 << 3;
 
     /**
      * Value of {@link #COLUMN_STATUS} when the download has failed (and will not be retried).
+     * 下载失败
      */
     public final static int STATUS_FAILED = 1 << 4;
 
@@ -172,6 +182,7 @@ public class DownloadManager {
     /**
      * Value of COLUMN_ERROR_CODE when the download has completed with an error that doesn't fit
      * under any other error code.
+     * 未知错误
      */
     public final static int ERROR_UNKNOWN = 1000;
 
@@ -179,18 +190,21 @@ public class DownloadManager {
      * Value of {@link #COLUMN_REASON} when a storage issue arises which doesn't fit under any
      * other error code. Use the more specific {@link #ERROR_INSUFFICIENT_SPACE} and
      * {@link #ERROR_DEVICE_NOT_FOUND} when appropriate.
+     * 文件付哦呜。
      */
     public final static int ERROR_FILE_ERROR = 1001;
 
     /**
      * Value of {@link #COLUMN_REASON} when an HTTP code was received that download manager
      * can't handle.
+     * 未处理的HTTP错误
      */
     public final static int ERROR_UNHANDLED_HTTP_CODE = 1002;
 
     /**
      * Value of {@link #COLUMN_REASON} when an error receiving or processing data occurred at
      * the HTTP level.
+     * 接收数据
      */
     public final static int ERROR_HTTP_DATA_ERROR = 1004;
 
@@ -238,16 +252,20 @@ public class DownloadManager {
     /**
      * Value of {@link #COLUMN_REASON} when the download exceeds a size limit for downloads over
      * the mobile network and the download manager is waiting for a Wi-Fi connection to proceed.
+     * 超出最大的移动网络下载量后暂停。
      */
     public final static int PAUSED_QUEUED_FOR_WIFI = 3;
 
     /**
      * Value of {@link #COLUMN_REASON} when the download is paused for some other reason.
+     * 未知原因暂停。
      */
     public final static int PAUSED_UNKNOWN = 4;
 
     /**
      * Broadcast intent action sent by the download manager when a download completes.
+     * 下载完成的广播
+     * TODO 修改广播的名称。
      */
     public final static String ACTION_DOWNLOAD_COMPLETE = "android.intent.action.DOWNLOAD_COMPLETE";
 
@@ -260,12 +278,14 @@ public class DownloadManager {
 
     /**
      * Intent action to launch an activity to display all downloads.
+     * 显示所有的下载
      */
     public final static String ACTION_VIEW_DOWNLOADS = "android.intent.action.VIEW_DOWNLOADS";
 
     /**
      * Intent extra included with {@link #ACTION_DOWNLOAD_COMPLETE} intents, indicating the ID (as a
      * long) of the download that just completed.
+     * 下载id的key
      */
     public static final String EXTRA_DOWNLOAD_ID = "extra_download_id";
 
@@ -328,8 +348,8 @@ public class DownloadManager {
          */
         public static final int NETWORK_WIFI = 1 << 1;
 
-        private Uri mUri;
-        private Uri mDestinationUri;
+        private Uri mUri;//url
+        private Uri mDestinationUri;//本地存储路径，比如是外部存储卡
         private List<Pair<String, String>> mRequestHeaders = new ArrayList<Pair<String, String>>();
         private CharSequence mTitle;
         private CharSequence mDescription;
@@ -341,6 +361,7 @@ public class DownloadManager {
 
         /**
          * @param uri the HTTP URI to download.
+         * 默认只支持HTTP，后扩充到HTTPS。
          */
         public Request(Uri uri) {
             if (uri == null) {
@@ -471,6 +492,8 @@ public class DownloadManager {
          *
          * @param show whether the download manager should show a notification for this download.
          * @return this object
+         *
+         * 设置下载过程中是否显示通知。
          */
         public Request setShowRunningNotification(boolean show) {
             mShowNotification = show;
@@ -482,6 +505,8 @@ public class DownloadManager {
          * network types are allowed.
          * @param flags any combination of the NETWORK_* bit flags.
          * @return this object
+         *
+         * 设置允许的网络类型。
          */
         public Request setAllowedNetworkTypes(int flags) {
             mAllowedNetworkTypes = flags;
@@ -493,6 +518,8 @@ public class DownloadManager {
          * allowed.
          * @param allowed whether to allow a roaming connection to be used
          * @return this object
+         *
+         * 是否允许漫游下载
          */
         public Request setAllowedOverRoaming(boolean allowed) {
             mRoamingAllowed = allowed;
@@ -504,6 +531,8 @@ public class DownloadManager {
          * default.
          * @param isVisible whether to display this download in the Downloads UI
          * @return this object
+         *
+         * 是否显示下载
          */
         public Request setVisibleInDownloadsUi(boolean isVisible) {
             mIsVisibleInDownloadsUi = isVisible;
@@ -629,6 +658,8 @@ public class DownloadManager {
          * @param direction either {@link #ORDER_ASCENDING} or {@link #ORDER_DESCENDING}
          * @return this object
          * @hide
+         *
+         * 只允许使用按照时间和大小进行排序。
          */
         public Query orderBy(String column, int direction) {
             if (direction != ORDER_ASCENDING && direction != ORDER_DESCENDING) {
@@ -752,8 +783,15 @@ public class DownloadManager {
      */
     public long enqueue(Request request) {
         ContentValues values = request.toContentValues(mPackageName);
+        if (Constants.LOGV){
+            Log.i(Constants.TAG, "enqueue:"+values.toString());
+        }
         Uri downloadUri = mResolver.insert(Downloads.CONTENT_URI, values);
         long id = Long.parseLong(downloadUri.getLastPathSegment());
+
+        if (Constants.LOGV){
+            Log.i(Constants.TAG, "开始下载: "+downloadUri);
+        }
         return id;
     }
 
@@ -812,6 +850,8 @@ public class DownloadManager {
      * @param id the ID of the download
      * @return a read-only {@link ParcelFileDescriptor}
      * @throws FileNotFoundException if the destination file does not already exist
+     *
+     * 根据id，打开下载后的文件。
      */
     public ParcelFileDescriptor openDownloadedFile(long id) throws FileNotFoundException {
         return mResolver.openFileDescriptor(getDownloadUri(id), "r");
@@ -822,6 +862,8 @@ public class DownloadManager {
      * method will only work when called from within the download manager's process.
      * @param ids the IDs of the downloads
      * @hide
+     *
+     * 重新下载会判断状态，只有已经下载完成的才能重新下载。
      */
     public void restartDownload(long... ids) {
         Cursor cursor = query(new Query().setFilterById(ids));
@@ -847,6 +889,7 @@ public class DownloadManager {
 
     /**
      * Get the DownloadProvider URI for the download with the given ID.
+     * 根据id生成URI
      */
     Uri getDownloadUri(long id) {
         return ContentUris.withAppendedId(mBaseUri, id);

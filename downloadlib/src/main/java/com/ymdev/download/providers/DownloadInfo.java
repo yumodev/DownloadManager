@@ -170,6 +170,7 @@ public class DownloadInfo {
 
     /**
      * The network is usable for the given download.
+     * 下载可用
      */
     public static final int NETWORK_OK = 1;
 
